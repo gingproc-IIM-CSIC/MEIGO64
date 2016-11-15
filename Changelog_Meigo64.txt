@@ -1,0 +1,46 @@
+﻿MEIGO64 - last revised 11 November 2016. 
+
+--> (JRB/JEGEA) Update 11-November-2016: 
+
+- corrected printing of objf when all points are infeasible 
+- added printing fobj for x0 if x0 is supplied
+
+--> (ALEX) Update 7-November-2016: 
+
+- Provide high quality gradients to FMINCON, calculated with AMICI using adjoint sensitivities
+(initially implemented by Daniel Weindl, September 2016).
+
+--> Update 20-May-2016
+
+- the parallel solver CeSS and CeVNS now use the Matlab Parallel Computing toolbox instead of jPar.
+(the use of jPar seems to be problematic in the latest Matlab versions due to changes in the JRE). 
+Before using CeSS or CeVNS, launch the workers using e.g. matlabpool open local 4 for 4 threads
+This is a contribution by Lukas Widmer (ETHZ).
+
+--> Update 20-May-2016
+
+Example:
+- in the Goodwin updated example, sensisitivities are now computed with AMICI 
+ (software from Hasenauer group)
+
+-->Previous (9-May-2016):
+
+What is new in MEIGO64:
+- new MEIGO version for Matlab 64 bit (mex64 for most local solvers, including Win and Linux)
+- includes updated mex solvers: nl2sol (for parameter estmation), misqp (for MINLP), etc.
+- nl2sol accepts high-quality gradients computed by sensitivities (see Gábor and Banga, 2015)
+
+Example:
+- the Goodwin_example folder illustrates these capabilities with an oscillator model. Sensitivities
+  are computed with odeSD (from J. Stelling group at ETHZ), but other sensitivities solvers can be used
+- this example is the same used in Gábor and Banga (2015), although no regularization here
+
+
+Julio R. Banga
+Email: julio@iim.csic.es
+
+References
+
+Gábor, A. and J. R. Banga (2015) Robust and efficient parameter estimation in dynamic 
+models of biological systems. BMC Systems Biology, 9:74
+http://bmcsystbiol.biomedcentral.com/articles/10.1186/s12918-015-0219-2

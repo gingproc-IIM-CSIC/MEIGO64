@@ -1,0 +1,46 @@
+30-MAY-2014 UPDATE OF eSS BY JOSE A. EGEA FIXING 2 BUGS
+24-JUNE-2014 eSS IN AMIGO2014bench UPDATED BY JRB
+
+--LIST OF CHANGES (WINMERGE CHECK by JRB)
+
+###FILE: ess_kernel.m
+
+520,522c520,522
+--- OLD
+< if (int_var) | (bin_var)
+<     solutions=ssm_round_int(solutions,int_var+bin_var,x_L,x_U);
+< end
+--- NEW
+>  for i=1:ndiverse+5
+>       solutions(i,log_var)=exp(solutions(i,log_var));
+>  end
+
+874a875
+---OLD
+<			newsol=rand(1,nvar).*(xu_log-xl_log)+xl_log;
+<           [val,val_penalty,pena,nlc,include,x] = ssm_evalfc(newsol,x_L,x_U,fobj,nconst,c_L,c_U,...
+--- NEW               
+>            newsol=rand(1,nvar).*(xu_log-xl_log)+xl_log;
+>            newsol(log_var)=exp(newsol(log_var));
+>            [val,val_penalty,pena,nlc,include,x] = ssm_evalfc(newsol,x_L,x_U,fobj,nconst,c_L,c_U,...
+
+
+###FILE: ess_local_filters.m
+
+69,72d68
+---OLD
+< if stage_1==1
+<     stage_1=0;
+<     stage_2=1;
+< end
+---NEW
+BLOCK IF ABOVE REMOVED
+
+77a74
+---OLD
+if include & pena<=tolc
+---NEW
+> 
+78a76
+if include & pena<=tolc
+> if stage_1==1, stage_1=0; stage_2=1; end
