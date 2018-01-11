@@ -10,12 +10,11 @@ MEIGO64
 
 ### How do I get set up? ###
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+Please check the original MEIGO (Matlab version) documentation available at:
+http://gingproc.iim.csic.es/meigom.html
+
+Further documentation and examples describing the new features of MEIGO65 
+will be added here in the near future.
 
 ### Contribution guidelines ###
 
