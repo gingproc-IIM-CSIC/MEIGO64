@@ -2,7 +2,12 @@
 
 MEIGO64
 
-Updated Matlab version the MEIGO toolbox ( http://gingproc.iim.csic.es/meigom.html )
+MEIGO64 is an updated Matlab version of the MEIGO toolbox:
+
+Egea JA, Henriques D, Cokelaer T, Villaverde AF, MacNamara A, Danciu DP, Banga JR and Saez-Rodriguez J. (2014) 
+MEIGO: an open-source software suite based on metaheuristics for global optimization in systems biology 
+and bioinformatics. BMC Bioinformatics 15:136.
+https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-15-136
 
 ### What is this repository for? ###
 
