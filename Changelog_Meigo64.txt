@@ -1,4 +1,8 @@
-﻿MEIGO64 - last revised 18 January 2018. 
+﻿MEIGO64 - last revised 20-Feb-2018. 
+
+--> Update 20-Feb-2018 (JRB): 
+
+- Added IPOPT binaries for Linux/Win64
 
 --> Update 16-May-2017 (AFV):
 
