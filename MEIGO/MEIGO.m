@@ -1,15 +1,17 @@
-function [Results]=MEIGO(problem,opts,algorithm,varargin)
+function [Results] = MEIGO(problem,opts,algorithm,varargin)
 
-algorithm=upper(algorithm);
+algorithm = upper(algorithm);
 
-if strmatch(algorithm,'VNS')
-    Results=rvnds_hamming(problem,opts,varargin{:});
-elseif strmatch(algorithm,'ESS')
-    Results=ess_kernel(problem,opts,varargin{:});
-elseif strmatch(algorithm,'MULTISTART')
-    Results=ssm_multistart(problem,opts,varargin{:});
+if strcmpi(algorithm,'VNS')
+    Results = rvnds_hamming(problem,opts,varargin{:});
+elseif strcmpi(algorithm,'ESS')
+    Results = ess_kernel(problem,opts,varargin{:});
+elseif strcmpi(algorithm,'MULTISTART')
+    Results = ssm_multistart(problem,opts,varargin{:});
+elseif strcmpi(algorithm,'CESS')    
+    Results = CeSS(problem,opts);    
 else
     fprintf('The method defined in "algorithm" is not valid \n');
-    fprintf('Define a valid method (VNS or eSS) and rerun \n');
+    fprintf('Define a valid method (VNS, eSS, or CeSS) and rerun \n');
     Results=[];
 end

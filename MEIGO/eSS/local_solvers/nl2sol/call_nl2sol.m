@@ -12,8 +12,8 @@ ydata = zeros(ndata,1);
 % the perturbation parameter
 
 		
-% [x, fval, exitflag, iter, feval] = nl2sol_v2_1(@objf_nl2sol,grad,x0,ydata,lb,ub,pts); % version by Attila - needs testing
-[x, fval, exitflag, iter, feval] = nl2sol(@objf_nl2sol,grad,x0,ydata,lb,ub,opts);
+[x, fval, exitflag, iter, feval] = nl2sol_v2_1(@objf_nl2sol,grad,x0,ydata,lb,ub,opts); % version by Attila - needs testing
+%[x, fval, exitflag, iter, feval] = nl2sol(@objf_nl2sol,grad,x0,ydata,lb,ub,opts);
 
 % be sure:
 R = objf_nl2sol(x);

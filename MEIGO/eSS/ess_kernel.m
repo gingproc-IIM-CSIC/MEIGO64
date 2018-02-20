@@ -1009,7 +1009,7 @@ while (not(fin))
         end
     end
     
-    if ((fbest<fbest_lastiter)/fbest_lastiter)>tolc
+    if fbest<fbest_lastiter %((fbest<fbest_lastiter)/fbest_lastiter)>tolc
         Results.f=[Results.f fbest];
         Results.x=[Results.x; xbest];
         Results.time=[Results.time cputime-cpu_time];

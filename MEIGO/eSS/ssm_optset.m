@@ -1,5 +1,5 @@
 % $Header: svn://172.19.32.13/trunk/AMIGO2R2016/Kernel/OPT_solvers/eSS/ssm_optset.m 770 2013-08-06 09:41:45Z attila $
-function [opts] = optset(default,opts)
+function [opts] = ssm_optset(default,opts)
 
 %Esto es para poner el campo 'local' el ultimo
 if isfield(opts,'local') & not(isempty(opts.local))
@@ -41,10 +41,7 @@ if not(isempty(opts));
         end
         value = opts.local.(opt_names_local{i,:});
         default.local.(default_names_local{j,:}) = value;
-    end
-    
-    
-    
+    end    
     
 end
 opts=default;

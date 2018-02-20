@@ -52,15 +52,24 @@ if iterprint
     fprintf('Initial point function value: %f \n',f0);
     tic
 end
-if isFjacDefined
-        [x,fval,exitflag,numeval]=ssm_localsolver(x0,x_L,x_U,c_L,c_U,neq,ndata,int_var,bin_var,fobj,fjac,...
-            local_solver,local_iterprint,local_tol,weight,nconst,tolc,opts.local,varargin{:});
-    else
-        [x,fval,exitflag,numeval]=ssm_localsolver(x0,x_L,x_U,c_L,c_U,neq,ndata,int_var,bin_var,fobj,[],...
-            local_solver,local_iterprint,local_tol,weight,nconst,tolc,opts.local,varargin{:});
+
+%%% AFV 19/04/17: try-catch to avoid crashes due to errors in local search:
+try
+    if isFjacDefined
+            [x,fval,exitflag,numeval]=ssm_localsolver(x0,x_L,x_U,c_L,c_U,neq,ndata,int_var,bin_var,fobj,fjac,...
+                local_solver,local_iterprint,local_tol,weight,nconst,tolc,opts.local,varargin{:});
+        else
+            [x,fval,exitflag,numeval]=ssm_localsolver(x0,x_L,x_U,c_L,c_U,neq,ndata,int_var,bin_var,fobj,[],...
+                local_solver,local_iterprint,local_tol,weight,nconst,tolc,opts.local,varargin{:});
+    end
+catch
+    fprintf('The local search crashed \n');
+    x        = x0;
+    fval     = NaN;
+    exitflag = -1;
+    numeval  = 1;
 end
-%[x,fval,exitflag,numeval]=ssm_localsolver(x0,x_L,x_U,c_L,c_U,neq,ndata,int_var,bin_var,fobj,...
-%    local_solver,local_iterprint,local_tol,weight,nconst,tolc,varargin{:});
+%%% AFV: end of changes 19/04/17
 
 if iterprint
     fprintf('Local solution function value: %g \n',fval);
