@@ -1,4 +1,23 @@
-﻿MEIGO64 - last revised 11 November 2016. 
+﻿MEIGO64 - last revised 18 January 2018. 
+
+--> Update 16-May-2017 (AFV):
+
+- Modified 'ess_kernel.m' so that it stores all the intermediate points in the optimizations,
+even when no local search is used. 
+
+--> Update 02-May-2017 (AFV):
+
+- CeSS now accepts different local methods for different threads.
+- Multistart can be performed with several local methods.
+- Changes in the way CeSS is invoked: it is now called similarly as other methods, i.e.: 
+>> MEIGO(problem,opts,'cess')
+
+
+--> Update 19-April-2017 (AFV):
+
+- eSS made robust with respect to possible crashes in local searches:
+Modified "ess_local_filters" including a try-catch in the call to "ssm_localsolver".
+
 
 --> (JRB/JEGEA) Update 11-November-2016: 
 
