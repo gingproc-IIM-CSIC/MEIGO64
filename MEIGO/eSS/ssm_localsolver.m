@@ -35,7 +35,7 @@ else
     scale.g=1;
 end
 
-if abs(f1)==inf | f1==NaN
+if abs(f1)==inf || isnan(f1)
     scale.f=1;
 else
     scale.f=f1;
@@ -55,7 +55,7 @@ switch local_solver
             [],[],[],nlc_fun,[],[],c_L,c_U);
         %Prob.optParam.MaxIter=50;
         
-        if local_iterprint, Prob.PriLevOpt = 2, end;
+        if local_iterprint, Prob.PriLevOpt = 2; end
         
         switch local_tol
             case 1
@@ -65,7 +65,7 @@ switch local_solver
             case 2
                 Prob.optParam.eps_f=tolc;
                 Prob.optParam.eps_x=tolc;
-                Prob.optParam.eps_c=tolc
+                Prob.optParam.eps_c=tolc;
             case 3
                 Prob.optParam.eps_f=tolc/100;
                 Prob.optParam.eps_x=tolc/100;
@@ -363,6 +363,46 @@ switch local_solver
         [fval,x,numeval]=dhc(fobj,X0,initsize,thres,100*nvar,x_L,x_U,weight,c_L,c_U,local_iterprint,tolc,varargin{:});
         exitflag=1;
         
+    case 'ydhc'
+        % adapted implementation of dhc algorithm
+        
+        nvar = numel(X0);
+        
+        if local_tol == 1
+            thres = 1e-6;
+        elseif local_tol == 2
+            thres = 1e-8;
+        else % local_tol == 3
+            thres = 1e-10;
+        end
+        
+        options.MaxFunEvals = 100*nvar;
+        options.TolX = thres;
+        options.TolFun = thres;
+        
+        if local_iterprint
+            options.Display = 'iter';
+        else
+            options.Display = 'off';
+        end
+        
+        fun = @(x) feval(fobj, x, varargin{:});
+        
+        [x, fval, exitflag, output] = ydhc(fun, X0, x_L, x_U, options);
+        numeval = output.funcCount;
+        
+    case 'bobyqa'
+        % matlab interface to Powell's bobyqa algorithm for
+        % bound-constrained optimization
+        
+        nvar = numel(X0);
+        
+        options.MaxFunEvals = 100 * nvar;
+        
+        fun = @(x) feval(fobj, x, varargin{:});
+        [x, fval, exitflag, output] = bobyqa(fun, X0, x_L, x_U, options);
+        numeval = output.funcCount;
+        
     case 'fsqp'
         %fsqp
         mode=110;
@@ -399,7 +439,7 @@ switch local_solver
         
         tol2=tol1;
         
-        if nineq==0 & neq==0
+        if nineq==0 && neq==0
             constr_file='';
         else
             constr_file='constr_fsqp';
@@ -541,7 +581,7 @@ switch local_solver
                 tolx=tolc/10000;
                 tolf=tolc/10000;
         end
-
+        
         if local_iterprint
             dsp='iter';
         else
@@ -665,13 +705,8 @@ switch local_solver
         
         exitflag=1;
         
-    otherwise
-        %fmincon
-        if(strcmp(local_solver,'fmincon'))
-            
-        else
-            warning('There is no such local solver: %s , FMINCON is used.',local_solver);
-        end
+    case 'fmincon'
+        
         if isempty(c_U)
             const_fun=[];
         else
@@ -702,26 +737,35 @@ switch local_solver
             dsp='iter';
         else
             dsp='off';
-        end;
+        end
         %DW
-        if local_opts.use_gradient_for_finish==0
+        if local_opts.use_gradient_for_finish == 0
+            
             options=optimset('LargeScale','off','Display',dsp,'Tolx',tolx,'TolFun',tolf,'Tolcon',tolg,'MaxSQPIter',100*length(X0),'MaxFunEvals',200*nvar,'MaxIter',200*nvar);
+            
             [x,fval,exitflag,OUTPUT]=fmincon(@fmobj,X0,[],[],[],[],x_L,x_U,const_fun,options,fobj,neq,varargin{:});
+            
         else
+            
             %DW: provide gradient information
             if local_opts.check_gradient_for_finish
                 options=optimset('LargeScale','off','Display',dsp,'Tolx',tolx,'TolFun',tolf,'Tolcon',tolg,'MaxSQPIter', ...
                     100*length(X0),'MaxFunEvals',200*nvar,'MaxIter',200*nvar, ...
                     'GradObj', 'on', 'DerivativeCheck', 'on'); %, 'SpecifyConstraintGradient', true);
             else
-                    options=optimset('LargeScale','off','Display',dsp,'Tolx',tolx,'TolFun',tolf,'Tolcon',tolg,'MaxSQPIter', ...
+                options=optimset('LargeScale','off','Display',dsp,'Tolx',tolx,'TolFun',tolf,'Tolcon',tolg,'MaxSQPIter', ...
                     100*length(X0),'MaxFunEvals',200*nvar,'MaxIter',200*nvar, ...
                     'GradObj', 'on'); %, 'SpecifyConstraintGradient', true);
             end
             
             [x,fval,exitflag,OUTPUT]=fmincon(@fmobjgrad,X0,[],[],[],[],x_L,x_U,const_fun,options,fobj,neq,varargin{:});
+            
         end
+        
         numeval=n_fun_eval;
+        
+    otherwise
+        error(['Local solver ' local_solver ' not recognized.']);
         
 end
 % make sure x is a row vector.
@@ -731,8 +775,6 @@ x = x(:).';
 % Definition of constraints for constrnew
 function [f,g] = constr_obj(x,fun,neq,varargin)
 global n_fun_eval n_upper n_lower ccll ccuu
-
-g=[];
 
 [f,ggg] = feval(fun,x,varargin{:});
 
@@ -756,7 +798,7 @@ return
 
 %\-----------------------------------------------------/
 % Definition of objective for lsqnonlin
-function [fx J] = lsqnonlin_fobj(x,fobj,fjac,varargin)
+function [fx, J] = lsqnonlin_fobj(x,fobj,fjac,varargin)
 global n_fun_eval
 
 if nargout > 1
@@ -784,7 +826,7 @@ if isempty(who('n_fun_eval'))
     n_fun_eval=1;
 end
 
-if ~isempty(c_L) | ~isempty(c_U)
+if ~isempty(c_L) || ~isempty(c_U)
     [f,c] = feval(fun,x,varargin{:});
 else
     [f] = feval(fun,x,varargin{:});
@@ -878,7 +920,7 @@ global n_fun_eval ccll ccuu n_upper n_lower
 
 c=[];
 
-if ~isempty(ccll) | ~isempty(ccuu)
+if ~isempty(ccll) || ~isempty(ccuu)
     [fx,ggg] = feval(fobj,x,varargin{:});
 else
     [fx] = feval(fobj,x,varargin{:});
