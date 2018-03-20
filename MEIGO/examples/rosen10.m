@@ -1,4 +1,4 @@
-function [f g]= rosen10(x);
+function [f g]= rosen10(x)
 f=0;
 n=10;
 for i=1:n-1
