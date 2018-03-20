@@ -35,7 +35,7 @@ else
     scale.g=1;
 end
 
-if abs(f1)==inf | f1==NaN
+if abs(f1)==inf || isnan(f1)
     scale.f=1;
 else
     scale.f=f1;
@@ -55,7 +55,7 @@ switch local_solver
             [],[],[],nlc_fun,[],[],c_L,c_U);
         %Prob.optParam.MaxIter=50;
         
-        if local_iterprint, Prob.PriLevOpt = 2, end;
+        if local_iterprint, Prob.PriLevOpt = 2; end
         
         switch local_tol
             case 1
@@ -65,7 +65,7 @@ switch local_solver
             case 2
                 Prob.optParam.eps_f=tolc;
                 Prob.optParam.eps_x=tolc;
-                Prob.optParam.eps_c=tolc
+                Prob.optParam.eps_c=tolc;
             case 3
                 Prob.optParam.eps_f=tolc/100;
                 Prob.optParam.eps_x=tolc/100;
@@ -363,6 +363,15 @@ switch local_solver
         [fval,x,numeval]=dhc(fobj,X0,initsize,thres,100*nvar,x_L,x_U,weight,c_L,c_U,local_iterprint,tolc,varargin{:});
         exitflag=1;
         
+    case 'ydhc'
+        % adapted implementation of dhc algorithm
+        
+    case 'bobyqa'
+        % matlab interface of Powell's bobyqa algorithm for
+        % bound-constrained optimization
+        
+        
+        
     case 'fsqp'
         %fsqp
         mode=110;
@@ -399,7 +408,7 @@ switch local_solver
         
         tol2=tol1;
         
-        if nineq==0 & neq==0
+        if nineq==0 && neq==0
             constr_file='';
         else
             constr_file='constr_fsqp';
@@ -667,11 +676,10 @@ switch local_solver
         
     otherwise
         %fmincon
-        if(strcmp(local_solver,'fmincon'))
-            
-        else
+        if ~strcmp(local_solver,'fmincon')
             warning('There is no such local solver: %s , FMINCON is used.',local_solver);
         end
+        
         if isempty(c_U)
             const_fun=[];
         else
@@ -702,7 +710,7 @@ switch local_solver
             dsp='iter';
         else
             dsp='off';
-        end;
+        end
         %DW
         if local_opts.use_gradient_for_finish==0
             options=optimset('LargeScale','off','Display',dsp,'Tolx',tolx,'TolFun',tolf,'Tolcon',tolg,'MaxSQPIter',100*length(X0),'MaxFunEvals',200*nvar,'MaxIter',200*nvar);
@@ -732,8 +740,6 @@ x = x(:).';
 function [f,g] = constr_obj(x,fun,neq,varargin)
 global n_fun_eval n_upper n_lower ccll ccuu
 
-g=[];
-
 [f,ggg] = feval(fun,x,varargin{:});
 
 g=ggg(1:neq);
@@ -756,7 +762,7 @@ return
 
 %\-----------------------------------------------------/
 % Definition of objective for lsqnonlin
-function [fx J] = lsqnonlin_fobj(x,fobj,fjac,varargin)
+function [fx, J] = lsqnonlin_fobj(x,fobj,fjac,varargin)
 global n_fun_eval
 
 if nargout > 1
@@ -784,7 +790,7 @@ if isempty(who('n_fun_eval'))
     n_fun_eval=1;
 end
 
-if ~isempty(c_L) | ~isempty(c_U)
+if ~isempty(c_L) || ~isempty(c_U)
     [f,c] = feval(fun,x,varargin{:});
 else
     [f] = feval(fun,x,varargin{:});
@@ -878,7 +884,7 @@ global n_fun_eval ccll ccuu n_upper n_lower
 
 c=[];
 
-if ~isempty(ccll) | ~isempty(ccuu)
+if ~isempty(ccll) || ~isempty(ccuu)
     [fx,ggg] = feval(fobj,x,varargin{:});
 else
     [fx] = feval(fobj,x,varargin{:});
