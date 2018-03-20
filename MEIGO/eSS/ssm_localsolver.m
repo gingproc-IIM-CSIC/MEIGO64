@@ -366,11 +366,42 @@ switch local_solver
     case 'ydhc'
         % adapted implementation of dhc algorithm
         
+        nvar = numel(X0);
+        
+        if local_tol == 1
+            thres = 1e-6;
+        elseif local_tol == 2
+            thres = 1e-8;
+        else % local_tol == 3
+            thres = 1e-10;
+        end
+        
+        options.MaxFunEvals = 100*nvar;
+        options.TolX = thres;
+        options.TolFun = thres;
+        
+        if local_iterprint
+            options.Display = 'iter';
+        else
+            options.Display = 'off';
+        end
+        
+        fun = @(x) feval(fobj, x, varargin{:});
+        
+        [x, fval, exitflag, output] = ydhc(fun, X0, x_L, x_U, options);
+        numeval = output.funcCount;
+        
     case 'bobyqa'
-        % matlab interface of Powell's bobyqa algorithm for
+        % matlab interface to Powell's bobyqa algorithm for
         % bound-constrained optimization
         
+        nvar = numel(X0);
         
+        options.MaxFunEvals = 100 * nvar;
+        
+        fun = @(x) feval(fobj, x, varargin{:});
+        [x, fval, exitflag, output] = bobyqa(fun, X0, x_L, x_U, options);
+        numeval = output.funcCount;
         
     case 'fsqp'
         %fsqp
@@ -550,7 +581,7 @@ switch local_solver
                 tolx=tolc/10000;
                 tolf=tolc/10000;
         end
-
+        
         if local_iterprint
             dsp='iter';
         else
@@ -674,11 +705,7 @@ switch local_solver
         
         exitflag=1;
         
-    otherwise
-        %fmincon
-        if ~strcmp(local_solver,'fmincon')
-            warning('There is no such local solver: %s , FMINCON is used.',local_solver);
-        end
+    case 'fmincon'
         
         if isempty(c_U)
             const_fun=[];
@@ -712,24 +739,33 @@ switch local_solver
             dsp='off';
         end
         %DW
-        if local_opts.use_gradient_for_finish==0
+        if local_opts.use_gradient_for_finish == 0
+            
             options=optimset('LargeScale','off','Display',dsp,'Tolx',tolx,'TolFun',tolf,'Tolcon',tolg,'MaxSQPIter',100*length(X0),'MaxFunEvals',200*nvar,'MaxIter',200*nvar);
+            
             [x,fval,exitflag,OUTPUT]=fmincon(@fmobj,X0,[],[],[],[],x_L,x_U,const_fun,options,fobj,neq,varargin{:});
+            
         else
+            
             %DW: provide gradient information
             if local_opts.check_gradient_for_finish
                 options=optimset('LargeScale','off','Display',dsp,'Tolx',tolx,'TolFun',tolf,'Tolcon',tolg,'MaxSQPIter', ...
                     100*length(X0),'MaxFunEvals',200*nvar,'MaxIter',200*nvar, ...
                     'GradObj', 'on', 'DerivativeCheck', 'on'); %, 'SpecifyConstraintGradient', true);
             else
-                    options=optimset('LargeScale','off','Display',dsp,'Tolx',tolx,'TolFun',tolf,'Tolcon',tolg,'MaxSQPIter', ...
+                options=optimset('LargeScale','off','Display',dsp,'Tolx',tolx,'TolFun',tolf,'Tolcon',tolg,'MaxSQPIter', ...
                     100*length(X0),'MaxFunEvals',200*nvar,'MaxIter',200*nvar, ...
                     'GradObj', 'on'); %, 'SpecifyConstraintGradient', true);
             end
             
             [x,fval,exitflag,OUTPUT]=fmincon(@fmobjgrad,X0,[],[],[],[],x_L,x_U,const_fun,options,fobj,neq,varargin{:});
+            
         end
+        
         numeval=n_fun_eval;
+        
+    otherwise
+        error(['Local solver ' local_solver ' not recognized.']);
         
 end
 % make sure x is a row vector.

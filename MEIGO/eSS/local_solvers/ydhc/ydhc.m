@@ -207,7 +207,7 @@ end
 % finalize output
 outputFcn(ybst,fbst,funEvals,'done');
 % textual output
-f_display(options.Display,funEvals,fbst,delta,true)
+f_display(options.Display,funEvals,fbst,norm(v),true)
 
 % assign return values
 x                   = denormalize(ybst);

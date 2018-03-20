@@ -27,7 +27,10 @@ function varargout = bobyqa(fun,x0,lb,ub,varargin)
 % used by funHandleWrap.m to compute objective function values. This is
 % because via mexCallMATLAB only non-anonymous functions (e.g. defined in a
 % file) or global function handles can be called, but pesto uses anonymous
-% function handles. ATTENTION: This might be not thread-safe.
+% function handles. ATTENTION: This might be non-thread-safe.
+%
+% The current interface to Powell'S BOBYQA routine is rather rudimentary,
+% so feel free to improve on this.
 
 %% save objective funtion
 
@@ -101,7 +104,7 @@ starttime = cputime;
 output.funcCount = feval;
 output.algorithm = 'BOBYQA';
 output.t_cpu = cputime - starttime;
-exitflag = 1;
+exitflag = 1; % extract it from fortran if you need it
 
 % return
 varargout{1} = x;
