@@ -1,10 +1,10 @@
 
 function [Results]=ess_kernel(problem,opts,varargin)
 % function [Results]=ess_kernel(problem,opts,varargin)
-% Function   : eSS Release 2016A - last revised Nov-2016 - JEega, JRB
+% Function   : eSS Release 2014B - AMIGO2014bench VERSION WITH eSS MAY-2014-BUGS FIXED - JRB
 % Written by : Process Engineering Group IIM-CSIC (jegea@iim.csic.es)
 % Created on : 12/03/2008
-% Last Update: 11/11/2016 
+% Last Update: 04/11/2016
 % Email      : gingproc@iim.csic.es
 %
 % (c) CSIC, Spanish Council for Scientific Research
@@ -191,11 +191,11 @@ function [Results]=ess_kernel(problem,opts,varargin)
 %
 % If you use eSS and publish the results, please cite the following papers:
 %
-% Egea, J.A., Balsa-Canto, E., Garcï¿½a, M.S.G., Banga, J.R. (2009) Dynamic
+% Egea, J.A., Balsa-Canto, E., García, M.S.G., Banga, J.R. (2009) Dynamic
 % optimization of nonlinear processes with an enhanced scatter search
 % method. Industrial & Engineering Chemistry Research 49(9): 4388-4401.
 %
-% Egea, J.A., Martï¿½, R., Banga, J.R. (2010) An evolutionary method for
+% Egea, J.A., Martí, R., Banga, J.R. (2010) An evolutionary method for
 % complex-process optimization. Computers & Operations Research 37(2):
 % 315-324.
 
@@ -205,7 +205,7 @@ global stopOptimization
 stopOptimization=0;
 
 %Initialize time
-cpu_time=cputime;
+tinit = tic; %cpu_time=cputime;
 
 
 % if isfield(opts,'iterprint') & opts.iterprint
@@ -215,7 +215,7 @@ cpu_time=cputime;
 
 fprintf('\n');
 fprintf('------------------------------------------------------------------------------ \n');
-fprintf(' eSS R2016A - Enhanced Scatter Search    \n');
+fprintf(' eSS R2010B - Enhanced Scatter Search    \n');
 fprintf('<c> IIM-CSIC, Vigo, Spain -  email: gingproc@iim.csic.es \n');
 fprintf('------------------------------------------------------------------------------ \n\n');
 
@@ -225,7 +225,7 @@ nfuneval=0;
 fin=0;
 nreset=0;
 
-if not(isfield(opts,'maxeval')) && not(isfield(opts,'maxtime'))
+if not(isfield(opts,'maxeval')) & not(isfield(opts,'maxtime'))
     fprintf('WARNING:Either opts.maxeval or opts.maxtime must be defined as a stop criterion \n')
     fprintf('Define any of these options and rerun \n')
     Results=[];
@@ -463,7 +463,7 @@ if local_solver & strcmp(local_solver,'n2fb') | strcmp(local_solver,'dn2fb')| st
         [f g R]=feval(fobj,randx,varargin{:});
         ndata=length(R);
         
-        if ~isempty(g) & g
+        if ~isempty(g) && g
             fprintf('%s can not solve constrained problems \n',local_solver);
             fprintf('EXITING \n');
             Results=[];
@@ -484,11 +484,11 @@ end
 
 %DW 
 if opts.local.use_gradient_for_finish
-    if ~local_finish | ~strcmp(local_finish,'fmincon')
-        fprintf(['opts.local.use_gradient_for_finish == 1, can only be used with fmincon for the moment\n']);
-        fprintf('EXITING \n');
-        Results=[];
-    end
+    %if ~local_finish | ~strcmp(local_finish,'fmincon')
+    %    fprintf(['opts.local.use_gradient_for_finish == 1, can only be used with fmincon for the moment\n']);
+    %    fprintf('EXITING \n');
+    %    Results=[];
+    %end
     if nargout(problem.f) < 3
         fprintf(['opts.local.use_gradient_for_finish == 1, but no gradients are provided by "' problem.f '"\n']);
         fprintf('EXITING \n');
@@ -509,7 +509,7 @@ if local_finish & isempty(ndata) & strcmp(local_finish,'n2fb') | strcmp(local_fi
         randx=rand(1,nvar).*(x_U-x_L)+x_L;
         [f g R]=feval(fobj,randx,varargin{:});
         ndata=length(R);
-        if ~isempty(g) & g
+        if ~isempty(g) && g
             fprintf('%s can not solve constrained problems \n',local_solver);
             fprintf('EXITING \n');
             Results=[];
@@ -636,21 +636,6 @@ sol_val_pen=[f_0; sol_val_pen];   %We assume feasible points in f_0
 sol_pen=[zeros(l_f_0,1);sol_pen];         %We assume feasible points in f_0
 sol_nlc=[NaN*ones(l_f_0,nconst); sol_nlc];     %We do not know these values, but we do not care. We assume feasibility
 
-%% Update: 11/11/2016 
-%% The following added by JEgea on Nov-2016 to handle REfSet with infeasible solutions
-%% JRB reported the problem found in constrained problems: when initial point is infeasible, and
-%% all the elements in the generated RefSet are also infeasible, eSS was printing obj=Inf, which was misleading
-if isfield(problem,'x_0')
-    %This is if only one solution in x_0 is defined
-    if sol_pen(1) > 0
-     fprintf('Initial Point (x_0): INFEASIBLE SOLUTION. Penalized value: %g \n', sol_val_pen(1));
-    else
-       fprintf('Initial Point (x_0): FEASIBLE SOLUTION. Objective function value: %g \n', sol_val_pen(1));
-    end
- end
-%%
-
-
 %Initialize Refset
 Refset=zeros(dim_refset,nvar);
 Refset_values=zeros(dim_refset,1);
@@ -690,7 +675,7 @@ if not(isempty(ggg))
     xbest=Refset((ggg(iii)),:);
 end
 
-
+cpu_time = toc(tinit);
 iter=0;
 if iterprint==1
     if reg_flag
@@ -698,21 +683,15 @@ if iterprint==1
         amigo_privstruct.theta = AMIGO_scale_theta_back(amigo_privstruct.theta, amigo_inputs);
         [objReg] = AMIGO_PEcostreg(amigo_privstruct.theta,amigo_inputs,amigo_privstruct);
         reg_alpha = amigo_inputs.nlpsol.regularization.alpha;
-        fprintf('Initial Pop: NFunEvals: %i  Bestf: %g   Bestfit: %g   Pen: %g   CPUTime: %f    Var: %g \n',nfuneval,fbest,fbest - reg_alpha*objReg,objReg, cputime-cpu_time,var(Refset_values_penalty));
-    % else
-%% Nov2016: correction when there is no feasible point    
-     elseif isinf(fbest)
-        fprintf('Initial Pop: NFunEvals: %i  NO FEASIBLE POINT FOUND  Bestf (penalized): %g      CPUTime: %f    Var: %g \n',nfuneval,Refset_values_penalty(1),cputime-cpu_time,var(Refset_values_penalty));
-     else
-        fprintf('Initial Pop: NFunEvals: %i  Bestf: %g      CPUTime: %f    Var: %g \n',nfuneval,fbest,cputime-cpu_time,var(Refset_values_penalty));
-     end
-       
-    %end
-end %% iterprint==1
+        fprintf('Initial Pop: NFunEvals: %i  Bestf: %g   Bestfit: %g   Pen: %g   CPUTime: %f    Var: %g \n',nfuneval,fbest,fbest - reg_alpha*objReg,objReg, cpu_time,var(Refset_values_penalty));
+    else
+        fprintf('Initial Pop: NFunEvals: %i  Bestf: %g      CPUTime: %f    Var: %g \n',nfuneval,fbest,cpu_time,var(Refset_values_penalty));
+    end
+end
 
 Results.f=[Results.f fbest];
 Results.x=[Results.x;xbest];
-Results.time=[Results.time cputime-cpu_time];
+Results.time=[Results.time cpu_time];
 Results.neval=[Results.neval nfuneval];
 
 %Sort the Refset
@@ -895,7 +874,7 @@ while (not(fin))
     %Check the stop criterion
     if nfuneval>= maxeval
         fin=1;
-    elseif cputime-cpu_time>=maxtime
+    elseif toc(tinit)>=maxtime
         fin=2;
     elseif stopOptimization
         fin=4;
@@ -948,7 +927,7 @@ while (not(fin))
                 Results.xbest=xbest;
                 Results.numeval=nfuneval;
                 Results.end_crit=fin;
-                Results.cpu_time=cpu_time;
+                Results.cpu_time=toc(tinit); %cpu_time;
                 Results.Refset.x=Refset;
                 Results.Refset.f=Refset_values;
                 Results.Refset.fpen=Refset_values_penalty;
@@ -969,16 +948,10 @@ while (not(fin))
             amigo_privstruct.theta = AMIGO_scale_theta_back(amigo_privstruct.theta, amigo_inputs);
             [objReg] = AMIGO_PEcostreg(amigo_privstruct.theta,amigo_inputs,amigo_privstruct);
             reg_alpha = amigo_inputs.nlpsol.regularization.alpha;
-            fprintf('Iteration: %i NFunEvals: %i  Bestf: %g   Bestfit: %g   Pen: %g   CPUTime: %f    Var: %g \n',iter,nfuneval,fbest,fbest - reg_alpha*objReg,objReg, cputime-cpu_time,var(Refset_values_penalty));
-           %else
-           %% correction Nov-2016 - check if there are no feasible points
-            elseif isinf(fbest)
-            fprintf('Iteration: %i NFunEvals: %i  NO FEASIBLE POINT FOUND  Best Refset value (penalized): %g      CPUTime: %f    Var: %g \n',iter,nfuneval,Refset_values_penalty(1),cputime-cpu_time,var(Refset_values_penalty));
-            else
-             fprintf('Iteration: %i NFunEvals: %i  Bestf: %g      CPUTime: %f    Var: %g \n',iter,nfuneval,fbest,cputime-cpu_time,var(Refset_values_penalty));
-            end
-           %% fprintf('Iteration: %i NFunEvals: %i  Bestf: %g      CPUTime: %f    Var: %g \n',iter,nfuneval,fbest,cputime-cpu_time,var(Refset_values_penalty));
-        %end
+            fprintf('Iteration: %i NFunEvals: %i  Bestf: %g   Bestfit: %g   Pen: %g   CPUTime: %f    Var: %g \n',iter,nfuneval,fbest,fbest - reg_alpha*objReg,objReg, toc(tinit),var(Refset_values_penalty));
+        else
+            fprintf('Iteration: %i NFunEvals: %i  Bestf: %g      CPUTime: %f    Var: %g \n',iter,nfuneval,fbest,toc(tinit),var(Refset_values_penalty));
+        end
     end
     
     ddd=find(members_update);
@@ -1008,11 +981,11 @@ while (not(fin))
             end
         end
     end
-    
-    if fbest<fbest_lastiter %((fbest<fbest_lastiter)/fbest_lastiter)>tolc
+    % if ((fbest<fbest_lastiter)/fbest_lastiter)>tolc %%% AFV test:
+    if ((fbest<fbest_lastiter)/fbest_lastiter)>tolc || (fbest<fbest_lastiter) 
         Results.f=[Results.f fbest];
         Results.x=[Results.x; xbest];
-        Results.time=[Results.time cputime-cpu_time];
+        Results.time=[Results.time toc(tinit)];
         Results.neval=[Results.neval nfuneval];
         nreset=0;
         if plot_results==1
@@ -1047,7 +1020,7 @@ while (not(fin))
     %Check the stopping criterion
     if nfuneval>= maxeval
         fin=1;
-    elseif cputime-cpu_time>=maxtime
+    elseif toc(tinit)>=maxtime
         fin=2;
     elseif stopOptimization
         fin=4;
@@ -1081,7 +1054,7 @@ while (not(fin))
             if iterprint
                 fprintf('Final local refinement with: %s \n', upper(local_finish))
                 fprintf('Initial point function value: %f \n',f0);
-                tic
+                tfinal = tic;
             end
             if isFjacDefined
                 [x,fval,exitflag,numeval]=ssm_localsolver(x0,x_L,x_U,c_L,c_U,neq,ndata,int_var,bin_var,fobj,fjac,...
@@ -1096,14 +1069,14 @@ while (not(fin))
             if iterprint
                 fprintf('Local solution function value: %f \n',fval);
                 fprintf('Number of function evaluations in the local search: %i \n',numeval);
-                fprintf('CPU Time of the local search: %f  seconds \n\n',toc);
+                fprintf('CPU Time of the local search: %f  seconds \n\n',toc(tfinal));
             end
             nfuneval=nfuneval+numeval;
             %Evaluate the local solution
             [val,val_penalty,pena,nlc,include,x] = ssm_evalfc(x,x_L,x_U,fobj,nconst,c_L,c_U,...
                 tolc,weight,int_var,bin_var,varargin{:});
             nfuneval=nfuneval+1;
-            if include & pena<=tolc
+            if include && pena<=tolc
                 if val_penalty<fbest
                     fbest=val_penalty;
                     xbest=x;
@@ -1112,12 +1085,12 @@ while (not(fin))
             end
             ssm_delete_files(local_finish,c_U);
         end
-        cpu_time=cputime-cpu_time;
+        cpu_time=toc(tinit);
         Results.f=[Results.f fbest];
         Results.x=[Results.x; xbest];
         Results.neval=[Results.neval nfuneval];
         Results.time=[Results.time cpu_time];
-        if iterprint %%
+        if iterprint
             switch fin
                 case 1
                     disp('Maximum number of function evaluations achieved')
@@ -1129,27 +1102,13 @@ while (not(fin))
                     disp('Optimization stopped by the user')
                 case 5
                     disp('Maximum number of iterations without significant improvement')
-            end %%switch
+            end
             fprintf('Best solution value\t\t%g\n', fbest);
             fprintf('Decision vector\n');
             fprintf('\t%g\n', xbest');
-
-%% Correction Nov2016
-           %if iterprint==1
-                if isinf(fbest)
-                    fprintf('NO FEASIBLE SOLUTION FOUND   Best Refset value (penalized)\t\t%g\n', Refset_values_penalty(1));
-                    fprintf('Decision vector\n');
-                    fprintf('\t%g\n', Refset(1,:)');
-                else
-                    fprintf('Best solution value\t\t%g\n', fbest);
-                    fprintf('Decision vector\n');
-                    fprintf('\t%g\n', xbest');
-                end
-            %end
-           
             fprintf('CPU time\t\t%g\n', cpu_time);
             fprintf('Number of function evaluations\t\t%g\n', nfuneval);
-        end %% if iterprint
+        end
         fclose all;
         Results.fbest=fbest;
         Results.xbest=xbest;
@@ -1161,7 +1120,7 @@ while (not(fin))
         Results.Refset.fpen=Refset_values_penalty;
         Results.Refset.const=Refset_nlc;
         Results.Refset.penalty=penalty;
-        if plot_results==1 | plot_results==2
+        if plot_results==1 || plot_results==2
             stairs(Results.time,Results.f)
             xlabel('CPU Time (s)');
             ylabel('Objective Function Value (-)');

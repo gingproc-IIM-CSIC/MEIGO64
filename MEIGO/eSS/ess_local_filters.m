@@ -20,7 +20,7 @@ if stage_1==1
     %use_bestx is a flag indicating that the best solution has been
     %improved
 elseif stage_2==1;
-    if local_bestx & use_bestx
+    if local_bestx && use_bestx
         x0=xbest;
         f0=fbest;
         use_bestx=0;
@@ -91,14 +91,14 @@ end
 [val,val_penalty,pena,nlc,include,x] = ssm_evalfc(x,x_L,x_U,fobj,nconst,c_L,c_U,...
     tolc,weight,int_var,bin_var,varargin{:});
 nfuneval=nfuneval+1;
-if include & pena<=tolc
+if include && pena<=tolc
     if val_penalty<fbest
         fbest=val_penalty;
         xbest=x;
         if fbest<fbest_lastiter
             Results.f=[Results.f fbest];
             Results.x=[Results.x; xbest];
-            Results.time=[Results.time cputime-cpu_time];
+            Results.time=[Results.time toc(tinit)];
             Results.neval=[Results.neval nfuneval];
             if plot_results==1
                 stairs(Results.time,Results.f)
@@ -115,7 +115,7 @@ end
 if nfuneval>= maxeval
     fin=1;
     blacklist=ones(dim_refset);
-elseif cputime-cpu_time>=maxtime
+elseif toc(tinit)>=maxtime
     fin=2;
     blacklist=ones(dim_refset);
 elseif not(isempty(vtr))
