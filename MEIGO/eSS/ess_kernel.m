@@ -1,10 +1,10 @@
 
 function [Results]=ess_kernel(problem,opts,varargin)
 % function [Results]=ess_kernel(problem,opts,varargin)
-% Function   : eSS Release 2014B - AMIGO2014bench VERSION WITH eSS MAY-2014-BUGS FIXED - JRB
-% Written by : Process Engineering Group IIM-CSIC (jegea@iim.csic.es)
+% Function   : eSS Release 2019 - last revised Oct-2019 - AFV
+% Written by : Process Engineering Group IIM-CSIC
 % Created on : 12/03/2008
-% Last Update: 04/11/2016
+% Last Update: 29/10/2019
 % Email      : gingproc@iim.csic.es
 %
 % (c) CSIC, Spanish Council for Scientific Research
@@ -207,15 +207,9 @@ stopOptimization=0;
 %Initialize time
 tinit = tic; %cpu_time=cputime;
 
-
-% if isfield(opts,'iterprint') & opts.iterprint
-%     vers='eSS R2014B  IIM-CSIC, Vigo, Spain';% AMIGO2014bench VERSION - JRB
-%     fprintf('%-9s %s\n','Version:',  vers);
-% end
-
 fprintf('\n');
 fprintf('------------------------------------------------------------------------------ \n');
-fprintf(' eSS R2010B - Enhanced Scatter Search    \n');
+fprintf(' eSS R2019 - Enhanced Scatter Search    \n');
 fprintf('<c> IIM-CSIC, Vigo, Spain -  email: gingproc@iim.csic.es \n');
 fprintf('------------------------------------------------------------------------------ \n\n');
 
@@ -463,7 +457,7 @@ if local_solver & strcmp(local_solver,'n2fb') | strcmp(local_solver,'dn2fb')| st
         [f g R]=feval(fobj,randx,varargin{:});
         ndata=length(R);
         
-        if ~isempty(g) && g
+        if ~isempty(g) & g
             fprintf('%s can not solve constrained problems \n',local_solver);
             fprintf('EXITING \n');
             Results=[];
@@ -509,7 +503,7 @@ if local_finish & isempty(ndata) & strcmp(local_finish,'n2fb') | strcmp(local_fi
         randx=rand(1,nvar).*(x_U-x_L)+x_L;
         [f g R]=feval(fobj,randx,varargin{:});
         ndata=length(R);
-        if ~isempty(g) && g
+        if ~isempty(g) & g
             fprintf('%s can not solve constrained problems \n',local_solver);
             fprintf('EXITING \n');
             Results=[];
@@ -636,6 +630,20 @@ sol_val_pen=[f_0; sol_val_pen];   %We assume feasible points in f_0
 sol_pen=[zeros(l_f_0,1);sol_pen];         %We assume feasible points in f_0
 sol_nlc=[NaN*ones(l_f_0,nconst); sol_nlc];     %We do not know these values, but we do not care. We assume feasibility
 
+%% Update: 11/11/2016 
+%% The following added by JEgea on Nov-2016 to handle REfSet with infeasible solutions
+%% JRB reported the problem found in constrained problems: when initial point is infeasible, and
+%% all the elements in the generated RefSet are also infeasible, eSS was printing obj=Inf, which was misleading
+if isfield(problem,'x_0')
+    %This is if only one solution in x_0 is defined
+    if sol_pen(1) > 0
+     fprintf('Initial Point (x_0): INFEASIBLE SOLUTION. Penalized value: %g \n', sol_val_pen(1));
+    else
+       fprintf('Initial Point (x_0): FEASIBLE SOLUTION. Objective function value: %g \n', sol_val_pen(1));
+    end
+end
+%%
+
 %Initialize Refset
 Refset=zeros(dim_refset,nvar);
 Refset_values=zeros(dim_refset,1);
@@ -684,6 +692,10 @@ if iterprint==1
         [objReg] = AMIGO_PEcostreg(amigo_privstruct.theta,amigo_inputs,amigo_privstruct);
         reg_alpha = amigo_inputs.nlpsol.regularization.alpha;
         fprintf('Initial Pop: NFunEvals: %i  Bestf: %g   Bestfit: %g   Pen: %g   CPUTime: %f    Var: %g \n',nfuneval,fbest,fbest - reg_alpha*objReg,objReg, cpu_time,var(Refset_values_penalty));
+    % else
+    %% Nov2016: correction when there is no feasible point    
+    elseif isinf(fbest)
+        fprintf('Initial Pop: NFunEvals: %i  NO FEASIBLE POINT FOUND  Bestf (penalized): %g      CPUTime: %f    Var: %g \n',nfuneval,Refset_values_penalty(1),cpu_time,var(Refset_values_penalty));
     else
         fprintf('Initial Pop: NFunEvals: %i  Bestf: %g      CPUTime: %f    Var: %g \n',nfuneval,fbest,cpu_time,var(Refset_values_penalty));
     end
@@ -949,7 +961,11 @@ while (not(fin))
             [objReg] = AMIGO_PEcostreg(amigo_privstruct.theta,amigo_inputs,amigo_privstruct);
             reg_alpha = amigo_inputs.nlpsol.regularization.alpha;
             fprintf('Iteration: %i NFunEvals: %i  Bestf: %g   Bestfit: %g   Pen: %g   CPUTime: %f    Var: %g \n',iter,nfuneval,fbest,fbest - reg_alpha*objReg,objReg, toc(tinit),var(Refset_values_penalty));
-        else
+			%else
+            %% correction Nov-2016 - check if there are no feasible points
+        elseif isinf(fbest)
+            fprintf('Iteration: %i NFunEvals: %i  NO FEASIBLE POINT FOUND  Best Refset value (penalized): %g      CPUTime: %f    Var: %g \n',iter,nfuneval,Refset_values_penalty(1),toc(tinit),var(Refset_values_penalty));
+		else
             fprintf('Iteration: %i NFunEvals: %i  Bestf: %g      CPUTime: %f    Var: %g \n',iter,nfuneval,fbest,toc(tinit),var(Refset_values_penalty));
         end
     end
@@ -1103,9 +1119,18 @@ while (not(fin))
                 case 5
                     disp('Maximum number of iterations without significant improvement')
             end
-            fprintf('Best solution value\t\t%g\n', fbest);
-            fprintf('Decision vector\n');
-            fprintf('\t%g\n', xbest');
+		
+			%% Correction Nov2016
+			if isinf(fbest)
+				fprintf('NO FEASIBLE SOLUTION FOUND   Best Refset value (penalized)\t\t%g\n', Refset_values_penalty(1));
+				fprintf('Decision vector\n');
+				fprintf('\t%g\n', Refset(1,:)');
+			else
+				fprintf('Best solution value\t\t%g\n', fbest);
+				fprintf('Decision vector\n');
+				fprintf('\t%g\n', xbest');
+			end
+			
             fprintf('CPU time\t\t%g\n', cpu_time);
             fprintf('Number of function evaluations\t\t%g\n', nfuneval);
         end
