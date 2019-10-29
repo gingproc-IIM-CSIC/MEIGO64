@@ -454,7 +454,7 @@ if local_solver & strcmp(local_solver,'n2fb') | strcmp(local_solver,'dn2fb')| st
     else
         %Generate a random point within the bounds
         randx=rand(1,nvar).*(x_U-x_L)+x_L;
-        [f g R]=feval(fobj,randx,varargin{:});
+        [f,g,R]=feval(fobj,randx,varargin{:});
         ndata=length(R);
         
         if ~isempty(g) & g
@@ -501,7 +501,7 @@ if local_finish & isempty(ndata) & strcmp(local_finish,'n2fb') | strcmp(local_fi
     else
         %Generate a random point within the bounds
         randx=rand(1,nvar).*(x_U-x_L)+x_L;
-        [f g R]=feval(fobj,randx,varargin{:});
+        [f,g,R]=feval(fobj,randx,varargin{:});
         ndata=length(R);
         if ~isempty(g) & g
             fprintf('%s can not solve constrained problems \n',local_solver);
@@ -904,7 +904,7 @@ while (not(fin))
     
     
     members_to_update=find(candidate_update==1);
-    for i=1:length(members_to_update);
+    for i=1:length(members_to_update)
         [vector,vector_value,vector_penalty,vector_value_penalty,vector_nlc,new_child,new_child_value,...
             new_child_penalty,new_child_value_penalty,new_child_nlc,nfuneval]=ssm_beyond(Refset(members_to_update(i),:),...
             candidate(members_to_update(i),:),candidate_values_penalty(members_to_update(i)),fobj,nrand,tolc,weight,...
@@ -1155,7 +1155,7 @@ while (not(fin))
             save ess_report problem opts Results
         end
         %Delete aux files
-        if local_solver & isempty(strmatch(local_solver,local_finish));
+        if local_solver & isempty(strmatch(local_solver,local_finish))
 %             ssm_delete_files(local_solver,c_U);
         end
         %     keyboard
