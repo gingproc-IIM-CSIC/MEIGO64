@@ -18,7 +18,7 @@ https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-15-136
 ### How do I get set up? ###
 
 Please check the original MEIGO (Matlab version) documentation available at:
-http://gingproc.iim.csic.es/meigom.html
+https://digital.csic.es/bitstream/10261/96897/2/1471-2105-15-136-S1.pdf
 
 Further documentation and examples describing the new features of MEIGO64 
 will be added here in the near future.
